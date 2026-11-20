@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>دفتر قدم‌ها</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3e8;--card:#fff;--ink:#1d3426;--sub:#5d7466;--gold:#b8860b;--accent:#2f6b45;--onaccent:#fff;--line:#d5dfcd;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10211a;--card:#183226;--ink:#eaf2e4;--sub:#9db8a4;--gold:#e8b94a;--accent:#e8b94a;--onaccent:#10211a;--line:#2a4a39}}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Vazirmatn,Tahoma,sans-serif;line-height:1.8;min-height:100vh}
+main{max-width:480px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:28px;font-weight:900;margin:8px 0 2px}
+.sub{color:var(--sub);margin:0 0 18px;font-size:14px}
+.bank{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:16px}
+.bank b{color:var(--gold);font-size:22px}
+.dist{font-size:64px;font-weight:900;text-align:center;line-height:1.1;margin:10px 0 0}
+.dist small{font-size:18px;font-weight:400;color:var(--sub)}
+.stats{text-align:center;color:var(--sub);margin:4px 0 16px}
+.msg{min-height:110px;background:var(--card);border-right:5px solid var(--gold);border-radius:6px 14px 14px 6px;padding:14px 16px;font-size:18px;margin-bottom:16px}
+.msg small{display:block;color:var(--gold);font-weight:700;margin-bottom:2px}
+button{font:inherit;cursor:pointer}
+.go{width:100%;padding:16px;font-size:20px;font-weight:700;border:0;border-radius:14px;background:var(--accent);color:var(--onaccent)}
+.go:focus-visible,.mood button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.mood{display:none;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px;text-align:center}
+.mood.show{display:block}
+.mood button{margin:4px;padding:10px 14px;border-radius:12px;border:1px solid var(--accent);background:transparent;color:var(--ink);font-size:16px}
+.note{color:var(--sub);font-size:13px;text-align:center;min-height:22px}
+h2{font-size:17px;margin:26px 0 8px}
+.hist{list-style:none;padding:0;margin:0}
+.hist li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
+</style>
+</head>
+<body>
+<main>
+<h1>دفتر قدم‌ها</h1>
+<p class="sub">هر ۲۰۰ متر، یک سکه و یک جمله برای جانت</p>
+
+<div class="bank"><span>قلک تو</span><b id="coins">۰ سکه</b></div>
+
+<div class="dist"><span id="km">۰</span> <small>متر</small></div>
+<div class="stats" id="stats">آماده‌ای؟</div>
+
+<div class="msg" id="msg"><small>پیام مسیر</small>دکمه‌ی شروع را بزن و راه بیفت. اولین پیام بعد از ۲۰۰ متر می‌آید.</div>
+
+<button class="go" id="go">شروع پیاده‌روی</button>
+<div class="note" id="note"></div>
+
+<div class="mood" id="mood">
+<div id="summary" style="margin-bottom:8px"></div>
+<div>حالت بعد از پیاده‌روی چطور شد؟</div>
+<button data-m="بهتر شدم">بهتر شدم 😊</button>
+<button data-m="مثل قبل">مثل قبل 😐</button>
+<button data-m="هنوز نه">هنوز نه 😔</button>
+</div>
+
+<h2>پیاده‌روی‌های قبلی</h2>
+<ul class="hist" id="hist"></ul>
+</main>
+
+<script>
+(function(){
+var MSGS=[
+"دویست متر رفتی و زیباتر شدی. تو به طبیعت نیامدی، طبیعت به پیش تو آمد.",
+"نفس عمیق بکش. هوا رایگان است و گران‌بهاترین چیز دنیاست.",
+"هر قدمت یک سکه‌ی طلاست. تو روی طلا راه می‌روی.",
+"زیبایی دیدی؟ همین الان چشمت یک چیز قشنگ پیدا کرده. نگاهش کن.",
+"همه‌ی زیورآلات و جواهرات از دل همین زمین آمده‌اند. تو داری از میان گنج‌ها رد می‌شوی.",
+"ماشین‌ها و ساختمان‌های لوکس هم از خاک همین طبیعت ساخته شده‌اند. تو کنار سرچشمه‌ی همه‌ی آن‌هایی.",
+"قوی باش و ادامه بده. ذهنت دارد صاف می‌شود.",
+"ایده‌های بزرگ در همین قدم‌ها به دنیا می‌آیند. اگر ایده‌ای آمد، یادش نگه دار.",
+"امروز تو از دیروزت ثروتمندتری، هم در جیب و هم در جان.",
+"پای تو دارد راه ثروت و آرامشت را روی زمین می‌کشد."
+];
+var STEP=200;
+var $=function(i){return document.getElementById(i)};
+var fa=function(n){return Number(n).toLocaleString('fa-IR')};
+var S={coins:0,hist:[]};
+try{var raw=localStorage.getItem('daftar');if(raw)S=JSON.parse(raw)}catch(e){}
+function save(){try{localStorage.setItem('daftar',JSON.stringify(S))}catch(e){}}
+
+var watching=null,last=null,dist=0,milestones=0,t0=0,timer=null,lock=null;
+
+function meters(a,b){var R=6371000,r=Math.PI/180,
+dLat=(b.latitude-a.latitude)*r,dLon=(b.longitude-a.longitude)*r,
+x=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(a.latitude*r)*Math.cos(b.latitude*r)*Math.sin(dLon/2)*Math.sin(dLon/2);
+return 2*R*Math.asin(Math.sqrt(x))}
+
+function render(){
+$('coins').textContent=fa(S.coins)+' سکه';
+$('km').textContent=fa(Math.round(dist));
+var ul=$('hist');ul.innerHTML='';
+if(!S.hist.length){ul.innerHTML='<li><span>هنوز چیزی ثبت نشده</span></li>';return}
+S.hist.slice(0,8).forEach(function(h){
+var li=document.createElement('li');
+li.innerHTML='<span>'+h.d+' — '+fa(h.m)+' متر</span><span>'+(h.mood||'')+'</span>';
+ul.appendChild(li)})}
+
+function tick(){
+var s=Math.floor((Date.now()-t0)/1000);
+$('stats').textContent='زمان: '+fa(Math.floor(s/60))+' دقیقه و '+fa(s%60)+' ثانیه';}
+
+function onPos(p){
+var c=p.coords;
+if(c.accuracy>40){$('note').textContent='در حال گرفتن سیگنال GPS دقیق...';return}
+$('note').textContent='';
+if(last){var d=meters(last,c);if(d>3&&d<100){dist+=d;last=c}}else{last=c}
+var n=Math.floor(dist/STEP);
+while(milestones<n){
+milestones++;S.coins++;
+var m=MSGS[(milestones-1)%MSGS.length];
+$('msg').innerHTML='<small>'+fa(milestones*STEP)+' متر، یک سکه اضافه شد</small>'+m;
+save();
+if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}}
+render()}
+
+function onErr(e){$('note').textContent=e.code===1?'اجازه‌ی دسترسی به مکان را بده تا مسیر ثبت شود.':'GPS در دسترس نیست. بیرون از ساختمان امتحان کن.'}
+
+async function start(){
+if(!navigator.geolocation){$('note').textContent='این مرورگر GPS ندارد.';return}
+dist=0;milestones=0;last=null;t0=Date.now();
+$('mood').classList.remove('show');
+$('go').textContent='پایان پیاده‌روی';
+$('msg').innerHTML='<small>پیام مسیر</small>راه بیفت. طبیعت منتظر توست.';
+timer=setInterval(tick,1000);tick();
+watching=navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:true,maximumAge:2000});
+try{if(navigator.wakeLock)lock=await navigator.wakeLock.request('screen')}catch(e){}
+render()}
+
+function stop(){
+navigator.geolocation.clearWatch(watching);watching=null;clearInterval(timer);
+try{if(lock)lock.release()}catch(e){}
+$('go').textContent='شروع پیاده‌روی';
+var rec={d:new Date().toLocaleDateString('fa-IR'),m:Math.round(dist),mood:''};
+S.hist.unshift(rec);save();
+$('summary').innerHTML='آفرین! <b>'+fa(rec.m)+' متر</b> راه رفتی و <b>'+fa(milestones)+' سکه</b> جمع کردی.';
+$('mood').classList.add('show');render()}
+
+$('go').addEventListener('click',function(){watching===null?start():stop()});
+Array.prototype.forEach.call(document.querySelectorAll('.mood button'),function(b){
+b.addEventListener('click',function(){
+if(S.hist.length){S.hist[0].mood=b.getAttribute('data-m');save()}
+$('summary').textContent=b.getAttribute('data-m')==='بهتر شدم'?'خوشحالم! این حس را به یاد بسپار.':'اشکالی ندارد. فردا دوباره، قدم به قدم.';
+render()})});
+render();
+})();
+</script>
+</body>
+</html>
